@@ -96,8 +96,7 @@ pub struct MessageBuilder<'a> {
 }
 
 impl<'a> MessageBuilder<'a> {
-    /// Get a new instance of Message. You need to supply either
-    /// a registration id, or a topic (/topics/...).
+    /// Get a new instance of Message. You need to supply to.
     pub fn new(api_key: &'a str, to: &'a str) -> Self {
         MessageBuilder {
             api_key: api_key,
@@ -115,8 +114,7 @@ impl<'a> MessageBuilder<'a> {
         }
     }
 
-    /// Get a new instance of Message. You need to supply either
-    /// a registration id, or a topic (/topics/...).
+    /// Get a new instance of Message. You need to supply registration ids.
     pub fn new_multi<S>(api_key: &'a str, ids: &'a [S]) -> Self
         where
             S: Into<Cow<'a, str>> + AsRef<str>,
