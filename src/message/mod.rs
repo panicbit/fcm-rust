@@ -1,10 +1,12 @@
-#[cfg(test)]
-mod tests;
+use std::borrow::Cow;
 
 use erased_serde::Serialize;
-use crate::notification::Notification;
 use serde_json::{self, Value};
-use std::borrow::Cow;
+
+use crate::notification::Notification;
+
+#[cfg(test)]
+mod tests;
 
 #[derive(Serialize, PartialEq, Debug)]
 #[serde(rename_all = "lowercase")]
@@ -45,7 +47,8 @@ pub struct MessageBody<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     time_to_live: Option<i32>,
 
-    to: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    to: Option<&'a str>,
 }
 
 /// Represents a FCM message. Construct the FCM message
@@ -89,7 +92,7 @@ pub struct MessageBuilder<'a> {
     registration_ids: Option<Vec<Cow<'a, str>>>,
     restricted_package_name: Option<&'a str>,
     time_to_live: Option<i32>,
-    to: &'a str,
+    to: Option<&'a str>,
 }
 
 impl<'a> MessageBuilder<'a> {
@@ -98,8 +101,32 @@ impl<'a> MessageBuilder<'a> {
     pub fn new(api_key: &'a str, to: &'a str) -> Self {
         MessageBuilder {
             api_key: api_key,
-            to: to,
+            to: Some(to),
             registration_ids: None,
+            collapse_key: None,
+            priority: None,
+            content_available: None,
+            delay_while_idle: None,
+            time_to_live: None,
+            restricted_package_name: None,
+            dry_run: None,
+            data: None,
+            notification: None,
+        }
+    }
+
+    /// Get a new instance of Message. You need to supply either
+    /// a registration id, or a topic (/topics/...).
+    pub fn new_multi<S>(api_key: &'a str, ids: &'a [S]) -> Self
+        where
+            S: Into<Cow<'a, str>> + AsRef<str>,
+    {
+        let converted = ids.iter().map(|a| a.as_ref().into()).collect();
+
+        MessageBuilder {
+            api_key: api_key,
+            to: None,
+            registration_ids: Some(converted),
             collapse_key: None,
             priority: None,
             content_available: None,
@@ -114,8 +141,8 @@ impl<'a> MessageBuilder<'a> {
 
     /// String value to replace format specifiers in the body string.
     pub fn registration_ids<S>(&mut self, ids: &'a [S]) -> &mut Self
-    where
-        S: Into<Cow<'a, str>> + AsRef<str>,
+        where
+            S: Into<Cow<'a, str>> + AsRef<str>,
     {
         let converted = ids.iter().map(|a| a.as_ref().into()).collect();
 

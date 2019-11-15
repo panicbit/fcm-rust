@@ -7,7 +7,7 @@ use crate::{MessageBuilder, Priority};
 fn should_create_new_message() {
     let msg = MessageBuilder::new("api_key", "token").finalize();
 
-    assert_eq!(msg.body.to, "token");
+    assert_eq!(msg.body.to, Some("token"));
 }
 
 #[test]
