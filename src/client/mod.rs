@@ -22,7 +22,7 @@ impl Client {
     /// Get a new instance of Client.
     pub fn new() -> Client {
         let mut http_client = HttpClient::builder();
-        http_client.keep_alive(true);
+        http_client.pool_max_idle_per_host(std::usize::MAX);
 
         Client {
             http_client: http_client.build(HttpsConnector::new()),

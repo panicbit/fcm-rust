@@ -161,8 +161,8 @@ impl fmt::Display for FcmError {
     }
 }
 
-impl From<hyper::error::Error> for FcmError {
-    fn from(_: hyper::error::Error) -> Self {
+impl From<hyper::Error> for FcmError {
+    fn from(_: hyper::Error) -> Self {
         Self::ServerError(None)
     }
 }
