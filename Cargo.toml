@@ -19,7 +19,7 @@ serde_json = "1"
 erased-serde = "0.3"
 serde_derive = "1"
 futures = "0.3"
-hyper = { version = "0.14", features = ["http1", "http2", "stream"] }
+hyper = { version = "0.14", features = ["http1", "stream"] }
 hyper-tls = "0.5"
 http = "0.2"
 chrono = "0.4"
