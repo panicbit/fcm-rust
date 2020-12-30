@@ -11,7 +11,6 @@ use hyper::{
 use hyper_tls::{self, HttpsConnector};
 use crate::message::Message;
 use serde_json;
-use std::future::Future;
 
 /// An async client for sending the notification payload.
 pub struct Client {
@@ -30,7 +29,7 @@ impl Client {
     }
 
     /// Try sending a `Message` to FCM.
-    pub fn send(&self, message: Message<'_>) -> Result<FcmResponse, FcmError> {
+    pub async fn send(&self, message: Message<'_>) -> Result<FcmResponse, FcmError> {
         let payload = serde_json::to_vec(&message.body).unwrap();
 
         let builder = Request::builder()
