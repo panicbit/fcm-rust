@@ -1,7 +1,7 @@
 use crate::notification::NotificationBuilder;
+use crate::{MessageBuilder, Priority};
 use serde_json;
 use std::borrow::Cow;
-use crate::{MessageBuilder, Priority};
 
 #[test]
 fn should_create_new_message() {

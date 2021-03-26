@@ -116,8 +116,8 @@ impl<'a> MessageBuilder<'a> {
 
     /// Get a new instance of Message. You need to supply registration ids.
     pub fn new_multi<S>(api_key: &'a str, ids: &'a [S]) -> Self
-        where
-            S: Into<Cow<'a, str>> + AsRef<str>,
+    where
+        S: Into<Cow<'a, str>> + AsRef<str>,
     {
         let converted = ids.iter().map(|a| a.as_ref().into()).collect();
 
@@ -139,8 +139,8 @@ impl<'a> MessageBuilder<'a> {
 
     /// String value to replace format specifiers in the body string.
     pub fn registration_ids<S>(&mut self, ids: &'a [S]) -> &mut Self
-        where
-            S: Into<Cow<'a, str>> + AsRef<str>,
+    where
+        S: Into<Cow<'a, str>> + AsRef<str>,
     {
         let converted = ids.iter().map(|a| a.as_ref().into()).collect();
 
