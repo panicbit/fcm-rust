@@ -1,3 +1,4 @@
+use awc::error::SendRequestError;
 pub use chrono::{DateTime, Duration, FixedOffset};
 use serde::Deserialize;
 use std::{error::Error, fmt, str::FromStr};
@@ -158,8 +159,8 @@ impl fmt::Display for FcmError {
     }
 }
 
-impl From<reqwest::Error> for FcmError {
-    fn from(_: reqwest::Error) -> Self {
+impl From<SendRequestError> for FcmError {
+    fn from(_: SendRequestError) -> Self {
         Self::ServerError(None)
     }
 }

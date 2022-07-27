@@ -14,20 +14,20 @@ keywords = ["fcm", "firebase", "notification"]
 edition = "2018"
 
 [features]
-default = ["native-tls"]
-native-tls = ["reqwest/native-tls"]
-rustls = ["reqwest/rustls-tls"]
-vendored-tls = ["reqwest/native-tls-vendored"]
+default = ["rustls"]
+rustls = ["awc/rustls"]
+openssl = ["awc/openssl"]
+
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 erased-serde = "0.3"
-reqwest = {version = "0.11.0", features = ["json"], default-features=false}
+awc = "3.0.0-beta"
 chrono = "0.4"
 log = "0.4"
 
 [dev-dependencies]
 argparse = "0.2.1"
-tokio = { version = "1.0", features = ["rt-multi-thread", "macros"] }
+actix-rt = "2.2.0"
 pretty_env_logger = "0.3"

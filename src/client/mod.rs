@@ -1,46 +1,35 @@
 pub mod response;
 
+use awc::http::{header::{CONTENT_TYPE, CONTENT_LENGTH, AUTHORIZATION, RETRY_AFTER}, StatusCode};
+
 pub use crate::client::response::*;
 
 use crate::message::Message;
-use reqwest::header::{AUTHORIZATION, CONTENT_LENGTH, CONTENT_TYPE, RETRY_AFTER};
-use reqwest::{Body, StatusCode};
 
 /// An async client for sending the notification payload.
+#[derive(Default)]
 pub struct Client {
-    http_client: reqwest::Client,
-}
-
-impl Default for Client {
-    fn default() -> Self {
-        Self::new()
-    }
+    http_client: awc::Client,
 }
 
 impl Client {
     /// Get a new instance of Client.
     pub fn new() -> Client {
-        let http_client = reqwest::ClientBuilder::new()
-            .pool_max_idle_per_host(std::usize::MAX)
-            .build()
-            .unwrap();
-
-        Client { http_client }
+        Default::default()
     }
 
     /// Try sending a `Message` to FCM.
     pub async fn send(&self, message: Message<'_>) -> Result<FcmResponse, FcmError> {
         let payload = serde_json::to_vec(&message.body).unwrap();
 
-        let request = self
+        let mut response = self
             .http_client
             .post("https://fcm.googleapis.com/fcm/send")
-            .header(CONTENT_TYPE, "application/json")
-            .header(CONTENT_LENGTH, format!("{}", payload.len() as u64).as_bytes())
-            .header(AUTHORIZATION, format!("key={}", message.api_key).as_bytes())
-            .body(Body::from(payload))
-            .build()?;
-        let response = self.http_client.execute(request).await?;
+            .insert_header((CONTENT_TYPE, "application/json"))
+            .insert_header((CONTENT_LENGTH, format!("{}", payload.len() as u64).as_bytes()))
+            .insert_header((AUTHORIZATION, format!("key={}", message.api_key).as_bytes()))
+            .send_body(payload)
+            .await?;
 
         let response_status = response.status();
 
