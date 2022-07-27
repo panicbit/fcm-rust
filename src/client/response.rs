@@ -158,8 +158,20 @@ impl fmt::Display for FcmError {
     }
 }
 
-impl From<reqwest::Error> for FcmError {
-    fn from(_: reqwest::Error) -> Self {
+impl From<serde_json::Error> for FcmError {
+    fn from(_: serde_json::Error) -> Self {
+        Self::ServerError(None)
+    }
+}
+
+impl From<hyper::Error> for FcmError {
+    fn from(_: hyper::Error) -> Self {
+        Self::ServerError(None)
+    }
+}
+
+impl From<hyper::http::Error> for FcmError {
+    fn from(_: hyper::http::Error) -> Self {
         Self::ServerError(None)
     }
 }

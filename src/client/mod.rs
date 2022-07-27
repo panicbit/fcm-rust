@@ -1,14 +1,19 @@
 pub mod response;
 
+use http::header::{AUTHORIZATION, CONTENT_LENGTH, CONTENT_TYPE, RETRY_AFTER};
+use hyper::{client::HttpConnector, Body, Request, StatusCode};
+#[cfg(feature = "hyper-rustls")]
+use hyper_rustls::HttpsConnector;
+#[cfg(feature = "hyper-tls")]
+use hyper_tls::HttpsConnector;
+
 pub use crate::client::response::*;
 
 use crate::message::Message;
-use reqwest::header::{AUTHORIZATION, CONTENT_LENGTH, CONTENT_TYPE, RETRY_AFTER};
-use reqwest::{Body, StatusCode};
 
 /// An async client for sending the notification payload.
 pub struct Client {
-    http_client: reqwest::Client,
+    http_client: hyper::Client<HttpsConnector<HttpConnector>>,
 }
 
 impl Default for Client {
@@ -19,28 +24,30 @@ impl Default for Client {
 
 impl Client {
     /// Get a new instance of Client.
-    pub fn new() -> Client {
-        let http_client = reqwest::ClientBuilder::new()
-            .pool_max_idle_per_host(std::usize::MAX)
-            .build()
-            .unwrap();
+    pub fn new() -> Self {
+        #[cfg(feature = "hyper-tls")]
+        let connector = HttpsConnector::new();
 
-        Client { http_client }
+        #[cfg(feature = "hyper-rustls")]
+        let connector = HttpsConnector::with_native_roots();
+
+        Self {
+            http_client: hyper::Client::builder().build::<_, Body>(connector),
+        }
     }
 
     /// Try sending a `Message` to FCM.
     pub async fn send(&self, message: Message<'_>) -> Result<FcmResponse, FcmError> {
         let payload = serde_json::to_vec(&message.body).unwrap();
 
-        let request = self
-            .http_client
-            .post("https://fcm.googleapis.com/fcm/send")
+        let request = Request::builder()
+            .method("POST")
+            .uri("https://fcm.googleapis.com/fcm/send")
             .header(CONTENT_TYPE, "application/json")
-            .header(CONTENT_LENGTH, format!("{}", payload.len() as u64).as_bytes())
-            .header(AUTHORIZATION, format!("key={}", message.api_key).as_bytes())
-            .body(Body::from(payload))
-            .build()?;
-        let response = self.http_client.execute(request).await?;
+            .header(CONTENT_LENGTH, format!("{}", payload.len() as u64))
+            .header(AUTHORIZATION, format!("key={}", message.api_key))
+            .body(Body::from(payload))?;
+        let response = self.http_client.request(request).await?;
 
         let response_status = response.status();
 
@@ -52,7 +59,8 @@ impl Client {
 
         match response_status {
             StatusCode::OK => {
-                let fcm_response: FcmResponse = response.json().await.unwrap();
+                let buf = hyper::body::to_bytes(response).await?;
+                let fcm_response: FcmResponse = serde_json::from_slice(&buf)?;
 
                 match fcm_response.error {
                     Some(ErrorReason::Unavailable) => Err(response::FcmError::ServerError(retry_after)),
